@@ -62,7 +62,8 @@
 
 
         <!-- 分页 -->
-        <el-pagination small layout="prev, pager, next" :current-page="page" :page-size="pageSize" :total="messageTotal" :hide-on-single-page="show" @current-change="handleCurrentChange1">
+        <el-pagination small layout="prev, pager, next" :current-page="page" :page-size="pageSize" :total="messageTotal"
+          :hide-on-single-page="show" @current-change="handleCurrentChange1">
         </el-pagination>
       </el-main>
 
@@ -91,9 +92,10 @@
         messageTotal: 0,
         messages: [],
         show: true,
+        result: false,
         // 请求数据的页码
         page: 1,
-        pageSize:5,
+        pageSize: 5,
         links: [{
             name: "Github",
             url: "https://github.com/zy7y/sayhello.git"
@@ -122,45 +124,69 @@
           name: [{
               required: true,
               message: '请输入姓名',
-              trigger: 'blur'
+              trigger: 'change'
             },
             {
               min: 2,
               max: 5,
               message: '长度在 2 到 5 个字符',
-              trigger: 'blur'
+              trigger: 'change'
             }
           ],
           desc: [{
               required: true,
               message: '请输入留言内容',
-              trigger: 'blur'
+              trigger: 'change'
             },
             {
               min: 1,
               max: 150,
               message: '长度在 1 到 150 个字符',
-              trigger: 'blur'
+              trigger: 'change'
             }
           ]
         },
       },
       methods: {
+        getData() {
+          instance
+            .get('/message', {
+              params: {
+                page: this.page, // 页码
+              }
+            })
+            .then(response => (
+              this.messageTotal = response.data.total,
+              this.messages = response.data.data
+            ))
+            .catch(function (err) { // 请求失败处理
+              console.log(err);
+            });
+        },
+        postData() {
+          instance.post('/message', {
+            name: this.ruleForm.name,
+            body: this.ruleForm.desc
+          }).then(function (response) {
+            console.log(response)
+          }).catch(function (error) {
+            console.log(error)
+          });
+        },
         submitForm(formName) {
           this.$refs[formName].validate((valid) => {
             // 验证成功
             if (valid) {
-              console.log("!2313")
-              instance.post('/message', {
-                name: this.ruleForm.name,
-                body: this.ruleForm.desc
-              }).then(function (response) {
-                console.log(response);
-              }).catch(function (error) {
-                console.log(error);
-              });
+              // 添加接口
+              this.postData()
+              this.$message({
+                message: '恭喜你，这是一条成功消息',
+                type: 'success'
+              })
+              this.resetForm("ruleForm")
+              this.getData()
             } else {
-              return false
+              this.$message.error('错了哦，这是一条错误消息')
             }
           });
         },
@@ -168,44 +194,13 @@
           this.$refs[formName].resetFields();
         },
 
-        handleCurrentChange1: function(currentPage) {//页码切换
-        this.page = currentPage
-        instance
-          .get('/message', {
-            params: {
-              page: this.page, // 页码
-              limit: this.pageSize
-            }
-          })
-          .then(response => (
-            this.messages = response.data.data,
-            console.log(response.data.data)
-          ))
-          .catch(function (err) { // 请求失败处理
-            console.log(err);
-          });
-    }
+        handleCurrentChange1: function (currentPage) { //页码切换
+          this.page = currentPage
+          this.getData()
+        }
       },
       mounted() {
-        instance
-          .get('/message', {
-            params: {
-              // page: this.page, // 页码
-            }
-          })
-          .then(response => (
-            this.messageTotal = response.data.total,
-            this.messages = response.data.data,
-            console.log(response.data.data),
-            this.$notify({
-              title: '成功',
-              message: '获取留言列表成功!',
-              type: 'success'
-            })
-          ))
-          .catch(function (err) { // 请求失败处理
-            console.log(err);
-          });
+        this.getData(this.page)
       }
     })
   </script>
