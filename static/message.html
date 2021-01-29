@@ -155,11 +155,12 @@
                 page: this.page, // 页码
               }
             })
-            .then(response => (
+            .then(response => {
               this.messageTotal = response.data.total,
-              this.messages = response.data.data
-            ))
-            .catch(function (err) { // 请求失败处理
+              this.messages = response.data.data,
+              console.log("get")
+            })
+            .catch(err => { // 请求失败处理
               console.log(err);
             });
         },
@@ -167,10 +168,16 @@
           instance.post('/message', {
             name: this.ruleForm.name,
             body: this.ruleForm.desc
-          }).then(function (response) {
-            console.log(response)
-          }).catch(function (error) {
-            console.log(error)
+          }).then(response => {
+            console.log("post请求")
+            this.$message({
+                message: '感谢您的留言~',
+                type: 'success'
+              })
+            this.getData()
+            this.resetForm("ruleForm")
+          }).catch(error => {
+            this.$message.error('请求错误!')
           });
         },
         submitForm(formName) {
@@ -179,14 +186,8 @@
             if (valid) {
               // 添加接口
               this.postData()
-              this.$message({
-                message: '恭喜你，这是一条成功消息',
-                type: 'success'
-              })
-              this.resetForm("ruleForm")
-              this.getData()
             } else {
-              this.$message.error('错了哦，这是一条错误消息')
+              return false
             }
           });
         },
