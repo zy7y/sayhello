@@ -5,6 +5,7 @@ FastAPI + SQLAlchemy(sqlite3) + html + css + vue.js + axios
 # 动态
 1. 新增留言， 留言列表接口, 接口测试
 2. 完善前端页面,更改实时校验，https://blog.csdn.net/qq_22182989/article/details/103728781
+3. 体验版部署，更新docker 部署文档
 
 
 # 本地启动
@@ -14,3 +15,22 @@ FastAPI + SQLAlchemy(sqlite3) + html + css + vue.js + axios
 - http://127.0.0.1:8000/docs    # 接口文档
 - pycharm 打开 message.html 看到如下页面
 ![](https://gitee.com/zy7y/blog_images/raw/master/img/20210129000913.png)
+
+
+# docker部署
+**详细内容请看：https://www.cnblogs.com/zy7y/p/14344375.html**
+
+## 后端部署
+1. 进入到项目目录下(命令请在命令行执行)
+2. 执行`docker build -t sayhello .`
+3. 运行容器`docker run -d --name sayhello-fastapi -p 8000:80 sayhello`
+
+## 前端部署
+**需要确定static/message.html 中的 `baseURL`地址是不是后端服务器IP地址**
+![](https://gitee.com/zy7y/blog_images/raw/master/img/20210129124621.png)
+1. 进入到项目static目录下
+2. 执行`docker build -t sayhello-front .`
+3. 运行容器`docker run -d --name sayhello-front-9000 -p 9001:80 sayhello-front`
+
+## 访问 IP:9001/message.html
+![](https://gitee.com/zy7y/blog_images/raw/master/img/20210129124425.png)
