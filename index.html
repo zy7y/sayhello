@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Say Hello!(FastAPI)</title>
+  <link rel="icon" href="favicon.ico">
+  <!-- 引入vue -->
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+  <!-- 引入 element ui -->
+  <link href="https://cdn.bootcss.com/element-ui/2.4.5/theme-chalk/index.css" rel="stylesheet">
+  <script src="https://cdn.bootcss.com/element-ui/2.4.5/index.js"></script>
+  <!-- 引入axios -->
+  <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
+
+
+
+</head>
+
+<body>
+
+  <div id="app">
+    <el-container>
+      <el-header>
+        <a href="/">
+          <strong>Say Hello</strong>
+        </a>
+        <small>to the world</small>
+      </el-header>
+      <el-main>
+        <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-position="top" label-width="80px"
+          class="demo-ruleForm">
+          <el-form-item label="Name" prop="name">
+            <el-input v-model.trim="ruleForm.name"></el-input>
+          </el-form-item>
+          <el-form-item label="Message" prop="desc">
+            <el-input type="textarea" v-model.trim="ruleForm.desc"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" round plain @click.prevent="submitForm('ruleForm')">Submit</el-button>
+            <el-button type="primary" round plain @click="resetForm('ruleForm')">Reset</el-button>
+          </el-form-item>
+        </el-form>
+        <p class="total">{{messageTotal}} messages</p>
+        <div class="list-groups" v-for="message in messages">
+          <div class="list-group">
+            <div class="item-header">
+              {{message.name}}
+              <small class="m-1">
+                #{{message.id}}
+              </small>
+              <div>
+                <small class="m-2">
+                  {{message.create_at}}
+                </small>
+              </div>
+            </div>
+            <p>{{message.body}}</p>
+          </div>
+        </div>
+
+
+        <!-- 分页 -->
+        <el-pagination small layout="prev, pager, next" :current-page="page" :page-size="pageSize" :total="messageTotal"
+          :hide-on-single-page="show" @current-change="handleCurrentChange1">
+        </el-pagination>
+      </el-main>
+
+      <el-footer>
+        <div>
+          Copyright© 2021 /&nbsp
+        </div>
+        <div v-for="link in links">
+          <a :href="link.url" target="_blank">{{link.name}}</a> /&nbsp
+        </div>
+
+      </el-footer>
+    </el-container>
+  </div>
+
+  <script>
+    // axios 配置
+    instance = axios.create({
+      baseURL: 'http://127.0.0.1:8000', // 本地接口服务
+      timeout: 5000,
+    });
+
+    let app = new Vue({
+      el: "#app",
+      data: {
+        messageTotal: 0,
+        messages: [],
+        show: true,
+        result: false,
+        // 请求数据的页码
+        page: 1,
+        pageSize: 5,
+        links: [{
+            name: "Github",
+            url: "https://github.com/zy7y/sayhello.git"
+          },
+          {
+            name: "Gitee",
+            url: "https://gitee.com/zy7y"
+          },
+          {
+            name: "Blog",
+            url: "https://www.cnblogs.com/zy7y"
+          },
+          {
+            name: "SayHello(Flask)",
+            url: "https://github.com/greyli/sayhello"
+          }
+        ],
+        ruleForm: {
+          name: '',
+          delivery: false,
+          type: [],
+          resource: '',
+          desc: ''
+        },
+        rules: {
+          name: [{
+              required: true,
+              message: '请输入姓名',
+              trigger: 'change'
+            },
+            {
+              min: 2,
+              max: 5,
+              message: '长度在 2 到 5 个字符',
+              trigger: 'change'
+            }
+          ],
+          desc: [{
+              required: true,
+              message: '请输入留言内容',
+              trigger: 'change'
+            },
+            {
+              min: 1,
+              max: 150,
+              message: '长度在 1 到 150 个字符',
+              trigger: 'change'
+            }
+          ]
+        },
+      },
+      methods: {
+        getData() {
+          instance
+            .get('/message/', {
+              params: {
+                page: this.page, // 页码
+              }
+            })
+            .then(response => {
+              this.messageTotal = response.data.count,
+              this.messages = response.data.results,
+              console.log("get")
+            })
+            .catch(err => { // 请求失败处理
+              console.log(err);
+            });
+        },
+        postData() {
+          instance.post('/message/', {
+            name: this.ruleForm.name,
+            body: this.ruleForm.desc
+          }).then(response => {
+            console.log("post请求")
+            this.$message({
+                message: '感谢您的留言~',
+                type: 'success'
+              })
+            this.getData()
+            this.resetForm("ruleForm")
+          }).catch(error => {
+            this.$message.error('请求错误!')
+          });
+        },
+        submitForm(formName) {
+          this.$refs[formName].validate((valid) => {
+            // 验证成功
+            if (valid) {
+              // 添加接口
+              this.postData()
+            } else {
+              return false
+            }
+          });
+        },
+        resetForm(formName) {
+          this.$refs[formName].resetFields();
+        },
+
+        handleCurrentChange1: function (currentPage) { //页码切换
+          this.page = currentPage
+          this.getData()
+        }
+      },
+      mounted() {
+        this.getData(this.page)
+      }
+    })
+  </script>
+
+  <style>
+    body {
+      background-color: rgb(245, 245, 245) !important;
+    }
+
+    header {
+      margin: 50px 0 40px 0;
+    }
+
+    footer {
+      margin: 20px;
+    }
+
+    .el-header,
+    .el-footer {
+      /* background-color: #B3C0D1;
+    color: #333; */
+      text-align: center;
+      line-height: 60px;
+    }
+
+    .el-aside {
+      background-color: #D3DCE6;
+      color: #333;
+      text-align: center;
+      line-height: 200px;
+    }
+
+    .el-main {
+      color: #333;
+      text-align: center;
+      line-height: 160px;
+    }
+
+    body>.el-container {
+      width: 80%;
+      padding-right: 15px;
+      padding-left: 15px;
+      margin-right: auto;
+      margin-left: auto;
+    }
+
+    .el-container:nth-child(5) .el-aside,
+    .el-container:nth-child(6) .el-aside {
+      line-height: 260px;
+    }
+
+    .el-container:nth-child(7) .el-aside {
+      line-height: 320px;
+    }
+
+    .el-footer>div {
+      display: inline
+    }
+
+    .el-header>div {
+      display: inline
+    }
+
+    .el-form {
+      width: 50%;
+      padding-right: 15px;
+      padding-left: 15px;
+      margin-right: auto;
+      margin-left: auto;
+    }
+
+    strong {
+      font-size: 3.5rem;
+      font-weight: 300;
+      line-height: 1.2;
+      color: #28a745 !important;
+    }
+
+    a {
+      text-decoration: none !important;
+    }
+
+    small {
+      font-size: 24px;
+      font-weight: 400;
+      color: #6c757d !important;
+    }
+
+    .el-textarea__inner {
+      height: 85px;
+    }
+
+    /* 提交表单样式 */
+    .el-form--label-top .el-form-item__label {
+      float: left;
+      padding: 0px;
+    }
+
+    .total {
+      margin-bottom: .5rem;
+      font-size: 1.25rem;
+      font-family: inherit;
+      font-weight: 500;
+      line-height: 1.2;
+      color: inherit;
+      margin-left: 25%;
+    }
+
+    .list-groups {
+      width: 50%;
+      margin-right: auto;
+      margin-left: auto;
+    }
+
+    /* 列表展示还有问题 圆角 */
+    .list-group {
+      position: relative;
+      display: block;
+      padding: .75rem 1.25rem;
+      margin-bottom: -1px;
+      background-color: #fff;
+      border-top-left-radius: .25rem;
+      border-top-right-radius: .25rem;
+      border-radius: 1px solid rgba(0, 0, 0, .125);
+      border: 1px solid rgba(0, 0, 0, .125);
+    }
+
+    .list-group>div {
+      color: #28a745 !important;
+      margin-bottom: .25rem !important;
+      font-size: 1.25rem;
+      text-align: left;
+      line-height: 100%;
+    }
+
+    .list-group>div>div {
+      display: inline;
+      float: right;
+    }
+
+    .m-1 {
+      color: #6c757d !important;
+      font-size: 80%;
+    }
+
+    .m-2 {
+      font-size: 30%;
+      font-weight: 400;
+    }
+
+    p {
+      margin-bottom: .25rem !important;
+      text-align: left;
+      line-height: 100%;
+    }
+
+    /* 分页 */
+    .el-pagination {
+      line-height: initial;
+    }
+  </style>
+
+</body>
+
+</html>
