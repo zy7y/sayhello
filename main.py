@@ -86,10 +86,18 @@ app = Bottle()
 app.install(SQLitePlugin(dbfile="db.sqlite"))
 
 
+# 跨域处理 https://www.cnblogs.com/huchong/p/10078033.html
+@app.hook("before_request")
+def validate():
+    request_method = request.environ.get("REQUEST_METHOD")
+    access_control = request.environ.get("HTTP_ACCESS_CONTROL_REQUEST_METHOD")
+    if request_method == "OPTIONS" and access_control:
+        request.environ["REQUEST_METHOD"] = access_control
+
+
 @app.hook("after_request")
 def enable_cors():
     response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "*"
 
 
