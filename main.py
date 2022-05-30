@@ -123,7 +123,7 @@ def select(db):
     }
 
 
-@app.route("/message", method=["post", "options"])
+@app.post("/message")
 def create(db):
     name = request.json["name"]
     body = request.json["body"]
