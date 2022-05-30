@@ -89,6 +89,8 @@ app.install(SQLitePlugin(dbfile="db.sqlite"))
 @app.hook("after_request")
 def enable_cors():
     response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
 
 
 @app.get("/message")
@@ -113,7 +115,7 @@ def select(db):
     }
 
 
-@app.post("/message")
+@app.route("/message", method=["post", "options"])
 def create(db):
     name = request.json["name"]
     body = request.json["body"]
